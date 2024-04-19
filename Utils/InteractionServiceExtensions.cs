@@ -35,8 +35,6 @@ namespace DiscordBot.Utils
                     //await client.BulkOverwriteGlobalApplicationCommandsAsync(new ApplicationCommandProperties[] { });
                     var _interactionService = new InteractionService(client.Rest);
 
-                    foreach (var guild in client.Guilds)
-                        await _interactionService.RegisterCommandsToGuildAsync(guild.Id, true);
 
                     await shard.SetGameAsync($"tudo e todos [{client.ShardId}]", type: ActivityType.Listening);
                     _log.LogInformation($"Shard Number {client.ShardId} is connected and ready!");
@@ -45,6 +43,7 @@ namespace DiscordBot.Utils
                     {
                         await _interactionService.AddModulesAsync(Assembly.GetAssembly(typeof(ChatGPTModule)), provider);
 
+                        await _interactionService.RegisterCommandsGloballyAsync(true);
                         paginationService.InitInteractionServicePagination(_interactionService);
                         _interactionService.SlashCommandExecuted += SlashCommandExecuted;
                         shard.InteractionCreated += async (x) =>
