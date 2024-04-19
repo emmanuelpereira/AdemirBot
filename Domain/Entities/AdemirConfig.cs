@@ -39,6 +39,7 @@ namespace DiscordBot.Domain.Entities
         public ulong EventStageChannelId { get; set; }
         public long MinRecommendationLevel { get; set; }
         public bool KickNewAccounts { get; set; }
-        public ChatMessage[] TrainingMessages { get; internal set; }
+        public ChatMessage[] TrainingMessages { get; set; }
+        public bool EnableBotUserNameDetection { get; set; }
     }
 }

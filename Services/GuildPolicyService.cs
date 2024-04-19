@@ -758,7 +758,8 @@ namespace DiscordBot.Services
                 var guild = _client.GetGuild(user.Guild.Id);
                 var rejoin = false;
 
-                if (await CheckIfUserNamePatternIsRaidBotAndBan(user))
+                var config = await _db.ademirCfg.FindOneAsync(a => a.GuildId == guild.Id);
+                if (await CheckIfUserNamePatternIsRaidBotAndBan(user, config))
                     return;
 
                 var member = await _db.members.FindOneAsync(a => a.MemberId == user.Id && a.GuildId == user.Guild.Id);
@@ -772,7 +773,6 @@ namespace DiscordBot.Services
                     rejoin = true;
                 }
 
-                var config = await _db.ademirCfg.FindOneAsync(a => a.GuildId == member.GuildId);
                 if (await CheckIfNewAccountAndKickEm(config, user))
                     return;
 
@@ -814,8 +814,11 @@ namespace DiscordBot.Services
             return Task.CompletedTask;
         }
 
-        private async Task<bool> CheckIfUserNamePatternIsRaidBotAndBan(SocketGuildUser user)
+        private async Task<bool> CheckIfUserNamePatternIsRaidBotAndBan(SocketGuildUser user, AdemirConfig config)
         {
+            if (!config.EnableBotUserNameDetection)
+                return false;
+
             var avatarUrl = _client.GetUser(user.Id).GetAvatarUrl();
             if (avatarUrl == null)
             {

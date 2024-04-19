@@ -153,6 +153,53 @@ namespace DiscordBot.Modules
         }
 
         [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("ban-suspect-users", "Bloquear a entrada de usuarios com username/avaters suspeitos", runMode: RunMode.Async)]
+        public async Task EnablesuspectuserBan()
+        {
+            var config = (await db.ademirCfg.FindOneAsync(a => a.GuildId == Context.Guild.Id));
+            if (config == null)
+            {
+                await db.ademirCfg.AddAsync(new AdemirConfig
+                {
+                    AdemirConfigId = Guid.NewGuid(),
+                    GuildId = Context.Guild.Id,
+                    EnableBotUserNameDetection = true,
+                });
+            }
+            else
+            {
+                config.EnableBotUserNameDetection = true;
+                await db.ademirCfg.UpsertAsync(config);
+            }
+
+            await RespondAsync("Entrada de contas suspeitas bloqueada.", ephemeral: true);
+        }
+
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("disable-ban-suspect-users", "Desbloquear a entrada de usuarios com username/avaters suspeitos", runMode: RunMode.Async)]
+        public async Task DisableBotUserNameDetection()
+        {
+            var config = (await db.ademirCfg.FindOneAsync(a => a.GuildId == Context.Guild.Id));
+            if (config == null)
+            {
+                await db.ademirCfg.AddAsync(new AdemirConfig
+                {
+                    AdemirConfigId = Guid.NewGuid(),
+                    GuildId = Context.Guild.Id,
+                    EnableBotUserNameDetection = false,
+                });
+            }
+            else
+            {
+                config.EnableBotUserNameDetection = false;
+                await db.ademirCfg.UpsertAsync(config);
+            }
+
+            await RespondAsync("Entrada de contas suspeitas desbloqueada.", ephemeral: true);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("lock-server", "Bloquear a entrada de novos membros", runMode: RunMode.Async)]
         public async Task Lock()
         {
