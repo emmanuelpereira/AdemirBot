@@ -334,7 +334,7 @@ namespace DiscordBot.Modules
                     var background = ms.ToArray();
                     var canvas = surface.Canvas;
                     canvas.Clear(SKColors.Transparent);
-                    using var bitmap = SKBitmap.Decode(member.CardBackground);
+                    using var bitmap = SKBitmap.Decode(background);
                     canvas.DrawBitmap(bitmap, new SKRect(0, 0, 800, 200), new SKPaint { IsAntialias = true });                   
 
                     var filename = Path.GetTempFileName();
