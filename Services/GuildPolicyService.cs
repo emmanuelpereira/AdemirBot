@@ -1170,8 +1170,13 @@ namespace DiscordBot.Services
                 }
             }
 
-            await ProcessRoleRewards(config, member);
-
+            try
+            {
+                await ProcessRoleRewards(config, member);
+            }
+            catch (Exception ex) {
+                this._log.LogError(ex, "Erro ao atribuir cargos de nivel.");
+            }
             await _db.members.UpsertAsync(member, a => a.MemberId == member.MemberId && a.GuildId == member.GuildId);
 
             if (earnedXp > 0)
@@ -1246,9 +1251,10 @@ namespace DiscordBot.Services
 
             if (levelRolesToAdd.Count() == 0)
                 return;
-
-            await user.AddRolesAsync(levelRolesToAdd, new RequestOptions { AuditLogReason = "Novo cargo de Level" });
-            await user.RemoveRolesAsync(levelRolesToRemove, new RequestOptions { AuditLogReason = "Antigo cargo de Level" });
+            if (levelRolesToAdd.Count() > 0)
+                await user.AddRolesAsync(levelRolesToAdd, new RequestOptions { AuditLogReason = "Novo cargo de Level" });
+            if(levelRolesToRemove.Count() > 0)
+                await user.RemoveRolesAsync(levelRolesToRemove, new RequestOptions { AuditLogReason = "Antigo cargo de Level" });
         }
 
         private int ProcessWPM(ulong channelId = 0)
