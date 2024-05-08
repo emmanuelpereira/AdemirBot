@@ -331,17 +331,17 @@ namespace DiscordBot.Modules
 
                 using (var surface = SKSurface.Create(new SKImageInfo(800, 200)))
                 {
+                    var background = ms.ToArray();
                     var canvas = surface.Canvas;
                     canvas.Clear(SKColors.Transparent);
                     using var bitmap = SKBitmap.Decode(member.CardBackground);
-                    canvas.DrawBitmap(bitmap, new SKRect(0, 0, 800, 200));
-                    member.CardBackground = ms.ToArray();
+                    canvas.DrawBitmap(bitmap, new SKRect(0, 0, 800, 200), new SKPaint { IsAntialias = true });                   
 
                     var filename = Path.GetTempFileName();
                     using (var image = surface.Snapshot())
                     using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
                     {
-                        data.ToArray();
+                        member.CardBackground = data.ToArray();
                     }
                 }
             }
