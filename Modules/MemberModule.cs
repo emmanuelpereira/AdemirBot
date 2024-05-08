@@ -8,6 +8,8 @@ using DiscordBot.Services;
 using DiscordBot.Utils;
 using MongoDB.Driver;
 using SkiaSharp;
+using System;
+using static MongoDB.Bson.Serialization.Serializers.SerializerHelper;
 
 namespace DiscordBot.Modules
 {
@@ -341,7 +343,8 @@ namespace DiscordBot.Modules
                     using (var image = surface.Snapshot())
                     using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
                     {
-                        member.CardBackground = data.ToArray();
+                        member.CardBackgroundFile = $"{member.GuildId}/{member.MemberId}.png";
+                        db.BgCardBucket.UploadFromBytes(member.CardBackgroundFile, data.ToArray());
                     }
                 }
             }
@@ -775,9 +778,10 @@ namespace DiscordBot.Modules
                 var canvas = surface.Canvas;
                 canvas.Clear(backgroundColor);
 
-                if (member.CardBackground != null && member.CardBackground.Length > 0)
+                if (member.CardBackgroundFile != null)
                 {
-                    using var bitmap = SKBitmap.Decode(member.CardBackground);
+                    var background = db.BgCardBucket.DownloadAsBytes(member.CardBackgroundFile);
+                    using var bitmap = SKBitmap.Decode(background);
                     canvas.DrawBitmap(bitmap, new SKRect(0, 0, width, height));
                 }
 

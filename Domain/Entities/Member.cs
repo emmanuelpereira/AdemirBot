@@ -31,7 +31,7 @@ namespace DiscordBot.Domain.Entities
         public long LurkrXP { get; set; }
         public int EventsPresent { get; set; }
         public string ReasonBanned { get; set; }
-        public byte[] CardBackground { get; set; }
+        public string CardBackgroundFile { get; set; }
         public string AccentColor { get; set; }
         public ulong WelcomeMessageId { get; set; }
         public ulong[] RoleIds { get; set; }

@@ -2,6 +2,7 @@
 using DiscordBot.Repository;
 using DiscordBot.Utils;
 using MongoDB.Driver;
+using MongoDB.Driver.GridFS;
 
 namespace DiscordBot
 {
@@ -14,6 +15,17 @@ namespace DiscordBot
         }
 
         public IRepository<Membership> memberships { get => db.GetRepository<Membership>("memberships"); }
+        public GridFSBucket BgCardBucket
+        {
+            get =>
+            new GridFSBucket(db, new GridFSBucketOptions
+            {
+                BucketName = "bgcards",
+                ChunkSizeBytes = 1048576, // 1MB
+                WriteConcern = WriteConcern.WMajority,
+                ReadPreference = ReadPreference.Secondary
+            });
+        }
         public IRepository<MinigameMatch> minigames { get => db.GetRepository<MinigameMatch>("minigame_matches"); }
         public IRepository<Member> members { get => db.GetRepository<Member>("members"); }
         public IRepository<EventPresence> eventPresence { get => db.GetRepository<EventPresence>("event_presence"); }
