@@ -124,6 +124,7 @@ namespace DiscordBot.Services
                 {
                     foreach (var guild in _client.Guilds)
                     {
+
                         // await SairDeServidoresNaoAutorizados(guild);
                         await ProcessMemberProgression(guild);
                         await TrancarThreadAntigasDoAdemir(guild);
@@ -1174,7 +1175,8 @@ namespace DiscordBot.Services
             {
                 await ProcessRoleRewards(config, member);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 this._log.LogError(ex, "Erro ao atribuir cargos de nivel.");
             }
             await _db.members.UpsertAsync(member, a => a.MemberId == member.MemberId && a.GuildId == member.GuildId);
@@ -1253,7 +1255,7 @@ namespace DiscordBot.Services
                 return;
             if (levelRolesToAdd.Count() > 0)
                 await user.AddRolesAsync(levelRolesToAdd, new RequestOptions { AuditLogReason = "Novo cargo de Level" });
-            if(levelRolesToRemove.Count() > 0)
+            if (levelRolesToRemove.Count() > 0)
                 await user.RemoveRolesAsync(levelRolesToRemove, new RequestOptions { AuditLogReason = "Antigo cargo de Level" });
         }
 

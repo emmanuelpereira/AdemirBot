@@ -780,7 +780,7 @@ namespace DiscordBot.Modules
 
                 if (member.CardBackgroundFile != null)
                 {
-                    var background = db.BgCardBucket.DownloadAsBytes(member.CardBackgroundFile);
+                    var background = db.BgCardBucket.DownloadAsBytesByName(member.CardBackgroundFile);
                     using var bitmap = SKBitmap.Decode(background);
                     canvas.DrawBitmap(bitmap, new SKRect(0, 0, width, height));
                 }
