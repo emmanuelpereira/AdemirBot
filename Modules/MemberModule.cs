@@ -329,13 +329,13 @@ namespace DiscordBot.Modules
 
                 SKColor backgroundColor = SKColor.Parse("#313338");
 
-                using (var surface = SKSurface.Create(new SKImageInfo(800, 200)))
+                using (var surface = SKSurface.Create(new SKImageInfo(1600, 400)))
                 {
                     var background = ms.ToArray();
                     var canvas = surface.Canvas;
                     canvas.Clear(SKColors.Transparent);
                     using var bitmap = SKBitmap.Decode(background);
-                    canvas.DrawBitmap(bitmap, new SKRect(0, 0, 800, 200), new SKPaint { IsAntialias = true });                   
+                    canvas.DrawBitmap(bitmap, new SKRect(0, 0, 1600, 400), new SKPaint { IsAntialias = true });                   
 
                     var filename = Path.GetTempFileName();
                     using (var image = surface.Snapshot())
