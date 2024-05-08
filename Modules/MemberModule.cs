@@ -308,7 +308,7 @@ namespace DiscordBot.Modules
 
         [RequireUserPermission(GuildPermission.UseApplicationCommands)]
         [SlashCommand("background", "Define o background do card de evolução", runMode: RunMode.Async)]
-        public async Task BackgroundSet([Summary(description: "Imagem (1600x400)")] IAttachment imagem)
+        public async Task BackgroundSet([Summary(description: "Imagem (800x200)")] IAttachment imagem)
         {
             await DeferAsync();
             var cfg = await db.ademirCfg.Find(a => a.GuildId == Context.Guild.Id).FirstOrDefaultAsync();
@@ -326,7 +326,24 @@ namespace DiscordBot.Modules
                 var info = await client.GetStreamAsync(imagem.Url);
                 info.CopyTo(ms);
                 ms.Position = 0;
-                member.CardBackground = ms.ToArray();
+
+                SKColor backgroundColor = SKColor.Parse("#313338");
+
+                using (var surface = SKSurface.Create(new SKImageInfo(800, 200)))
+                {
+                    var canvas = surface.Canvas;
+                    canvas.Clear(SKColors.Transparent);
+                    using var bitmap = SKBitmap.Decode(member.CardBackground);
+                    canvas.DrawBitmap(bitmap, new SKRect(0, 0, 800, 200));
+                    member.CardBackground = ms.ToArray();
+
+                    var filename = Path.GetTempFileName();
+                    using (var image = surface.Snapshot())
+                    using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+                    {
+                        data.ToArray();
+                    }
+                }
             }
             else
             {
