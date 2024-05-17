@@ -169,7 +169,7 @@ namespace DiscordBot.Modules
             else
             {
                 config.EnableBotUserNameDetection = true;
-                await db.ademirCfg.UpsertAsync(config);
+                await db.ademirCfg.UpsertAsync(config, a => a.GuildId == Context.Guild.Id);
             }
 
             await RespondAsync("Entrada de contas suspeitas bloqueada.", ephemeral: true);
@@ -193,7 +193,7 @@ namespace DiscordBot.Modules
             else
             {
                 config.EnableBotUserNameDetection = false;
-                await db.ademirCfg.UpsertAsync(config);
+                await db.ademirCfg.UpsertAsync(config, a => a.GuildId == Context.Guild.Id);
             }
 
             await RespondAsync("Entrada de contas suspeitas desbloqueada.", ephemeral: true);
