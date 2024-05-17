@@ -830,7 +830,7 @@ namespace DiscordBot.Services
             var nomeInicial = DataSetUtils.FemaleNames.FirstOrDefault(a => user.Username.StartsWith(a.ToLower()))?.ToLower();
             if (nomeInicial != null)
             {
-                if (user.Username.Matches(nomeInicial + @"[a-z]{6}"))
+                if (user.Username.Matches($"^{nomeInicial}[a-z]{6}$"))
                 {
                     await user.BanAsync(reason: "Padrão de Username de Bot");
                 }
