@@ -180,7 +180,7 @@ namespace DiscordBot.Services
                 var msgs = new List<ChatMessage>() { new ChatMessage("user", content, await m.GetGPTAuthorNameAsync()) };
 
                 var gptModel = Models.Gpt_3_5_Turbo;
-                var gptTokenLimit = gptModel == Models.Gpt_4 ? 8000 : 4000;
+                var gptTokenLimit = gptModel == "gpt-4o" ? 8000 : 4000;
                 if (guild.Id == 1055161583841595412)
                 {
                     var qtd = OpenAI.Tokenizer.GPT3.TokenizerGpt3.TokenCount(string.Join("\n", msgs.Select(a => a.Content)));
@@ -279,7 +279,7 @@ namespace DiscordBot.Services
                 if(guild.Id == 1055161583841595412)
                 {
                     var qtd = OpenAI.Tokenizer.GPT3.TokenizerGpt3.TokenCount(string.Join("\n", msgs.Select(a => a.Content)));
-                    gptModel = qtd > 8000 ? Models.Gpt_4_1106_preview : Models.Gpt_4;
+                    gptModel = "gpt-4o";
                     gptTokenLimit = qtd > 8000 ? 8192 : 128000;
                 }
 
