@@ -148,4 +148,4 @@ Este projeto está licenciado sob a licença MIT. Consulte o arquivo [LICENSE.tx
 
 ## Contato
 Se você tiver alguma dúvida ou sugestão sobre o projeto "Ademir", sinta-se à vontade para entrar em contato:
-- [Discord](https://discord.gg/invite/Q6fQrf5jWX)
+- [Discord](https://disboard.org/server/1254275584243007559)
