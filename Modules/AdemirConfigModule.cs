@@ -4,6 +4,7 @@ using DiscordBot.Domain.Entities;
 using DiscordBot.Services;
 using DiscordBot.Utils;
 using MongoDB.Driver;
+using System;
 
 namespace DiscordBot.Modules
 {
@@ -173,6 +174,36 @@ namespace DiscordBot.Modules
             }
 
             await RespondAsync("Entrada de contas suspeitas bloqueada.", ephemeral: true);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("suspend-channel-flood-protection", "suspend-channel-flood-protection", runMode: RunMode.Async)]
+        public async Task SuspendChannelFloodProtection(ITextChannel channel)
+        {
+            var config = (await db.ademirCfg.FindOneAsync(a => a.GuildId == Context.Guild.Id));
+            var channels = new List<ulong>();
+            if (config == null)
+            {
+                config = new AdemirConfig
+                {
+                    AdemirConfigId = Guid.NewGuid(),
+                    GuildId = Context.Guild.Id,
+                    FloodProtectionByPassChannels = new ulong[0],
+                    EnableBotUserNameDetection = true,
+                };
+            }
+            else
+            {
+                config.EnableBotUserNameDetection = true;
+                if (config.FloodProtectionByPassChannels != null)
+                    channels.AddRange(config.FloodProtectionByPassChannels);
+            }
+            channels.Add(channel.Id);
+            config.FloodProtectionByPassChannels = channels.Distinct().ToArray();
+
+            await db.ademirCfg.UpsertAsync(config, a => a.GuildId == Context.Guild.Id);
+            await policySvc.BuscarCanaisComBypassDeFlood(Context.Guild);
+            await RespondAsync("suspend-channel-flood-protection.", ephemeral: true);
         }
 
 

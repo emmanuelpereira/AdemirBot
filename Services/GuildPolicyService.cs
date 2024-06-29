@@ -19,6 +19,7 @@ namespace DiscordBot.Services
         private ILogger<GuildPolicyService> _log;
         private Dictionary<ulong, List<string>> backlistPatterns = new Dictionary<ulong, List<string>>();
         private Dictionary<ulong, long> msgSinceAdemirCount = new Dictionary<ulong, long>();
+        private Dictionary<ulong, ulong[]> channelsBypassFlood = new Dictionary<ulong, ulong[]>();
         private Dictionary<ulong, bool> lockServer = new Dictionary<ulong, bool>();
         List<IMessage> mensagensUltimos5Minutos = new List<IMessage>();
 
@@ -145,6 +146,7 @@ namespace DiscordBot.Services
                         await ProcessarXPDeAudio(guild);
                         await AnunciarEventosComecando(guild);
                         await BuscarPadroesBlacklistados(guild);
+                        await BuscarCanaisComBypassDeFlood(guild);
                     })).ToArray();
                     Task.WaitAll(tasks);
                     await Task.Delay(TimeSpan.FromSeconds(120) - sw.Elapsed);
@@ -252,6 +254,18 @@ namespace DiscordBot.Services
                 await guild.LeaveAsync();
         }
 
+        public async Task BuscarCanaisComBypassDeFlood(IGuild guild)
+        {
+            var ademirCfg = await _db.ademirCfg.Find(a => a.GuildId == guild.Id).FirstOrDefaultAsync();
+            if (channelsBypassFlood.ContainsKey(guild.Id))
+            {
+                channelsBypassFlood[guild.Id] = ademirCfg.FloodProtectionByPassChannels;
+            }
+            else
+            {
+                channelsBypassFlood.Add(guild.Id, ademirCfg.FloodProtectionByPassChannels);
+            }
+        }
         public async Task BuscarPadroesBlacklistados(IGuild guild)
         {
             var blacklist = await _db.backlistPatterns.Find(a => a.GuildId == guild.Id).ToListAsync();
