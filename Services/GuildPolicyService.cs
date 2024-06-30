@@ -710,6 +710,11 @@ namespace DiscordBot.Services
                 var user = guild.GetUser(arg.Author.Id);
                 if (user == null)
                     return;
+
+
+                if (channelsBypassFlood.ContainsKey(guild.Id) && channelsBypassFlood[guild.Id].Contains(arg.Channel.Id))
+                    return;
+
                 var joinedJustNow = DateTime.UtcNow - user.JoinedAt.Value < TimeSpan.FromMinutes(60);
 
                 var mensagensUltimos10Segundos = mensagensUltimos5Minutos.Where(a => a.Author.Id == arg.Author.Id && a.Timestamp.UtcDateTime >= DateTime.UtcNow.AddSeconds(-10));
