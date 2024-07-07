@@ -8,6 +8,7 @@ using MongoDB.Driver;
 using DiscordBot.Domain.Entities;
 using Amazon.Runtime;
 using DiscordBot.Services;
+using System;
 
 namespace DiscordBot.Modules
 {
@@ -129,25 +130,27 @@ namespace DiscordBot.Modules
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("remove-banned-pattern", "Remove um padrão banido", runMode: RunMode.Async)]
-        public async Task RemoveBannedPattern(Guid id)
+        public async Task RemoveBannedPattern(string id)
         {
+            var guid = Guid.Parse(id);
             await DeferAsync();
-            var patterns = await db.backlistPatterns.DeleteAsync(a => a.GuildId == Context.Guild.Id && a.PatternId == id);
+            var patterns = await db.backlistPatterns.DeleteAsync(a => a.GuildId == Context.Guild.Id && a.PatternId == guid);
 
             await RespondAsync($"Padrão de ID {id} removido.", ephemeral: true);
         }
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("edit-banned-pattern", "Edita um padrão banido", runMode: RunMode.Async)]
-        public async Task EditBannedPattern(Guid id, string newPattern)
+        public async Task EditBannedPattern(string id, string newPattern)
         {
+            var guid = Guid.Parse(id);
             await DeferAsync();
 
-            var pattern = await db.backlistPatterns.Find(a => a.GuildId == Context.Guild.Id && a.PatternId == id).FirstOrDefaultAsync();
+            var pattern = await db.backlistPatterns.Find(a => a.GuildId == Context.Guild.Id && a.PatternId == guid).FirstOrDefaultAsync();
 
             if (pattern != null)
             {
-                await db.backlistPatterns.UpsertAsync(pattern, a => a.GuildId == Context.Guild.Id && a.PatternId == id);
+                await db.backlistPatterns.UpsertAsync(pattern, a => a.GuildId == Context.Guild.Id && a.PatternId == guid);
                 await RespondAsync($"Padrão de ID {id} alterado para {newPattern}.", ephemeral: true);
             }
             else
