@@ -658,7 +658,7 @@ namespace DiscordBot.Services
                 progression.MemberCount = guild.MemberCount;
 
                 await _db.progression.UpsertAsync(progression);
-                _log.LogInformation($"Membros em {guild.Name}: {guild.MemberCount}. Owner: {guild.Owner.Username}.");
+                _log.LogInformation($"Membros em {guild.Name} [{guild.Id}]: {guild.MemberCount}. Owner: {guild.Owner.Username} [{guild.Owner.Id}].");
             }
             catch
             {
