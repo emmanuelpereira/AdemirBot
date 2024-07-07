@@ -133,7 +133,6 @@ namespace DiscordBot.Modules
         public async Task RemoveBannedPattern(string id)
         {
             var guid = Guid.Parse(id);
-            await DeferAsync();
             var patterns = await db.backlistPatterns.DeleteAsync(a => a.GuildId == Context.Guild.Id && a.PatternId == guid);
 
             await RespondAsync($"Padrão de ID {id} removido.", ephemeral: true);
@@ -144,7 +143,6 @@ namespace DiscordBot.Modules
         public async Task EditBannedPattern(string id, string newPattern)
         {
             var guid = Guid.Parse(id);
-            await DeferAsync();
 
             var pattern = await db.backlistPatterns.Find(a => a.GuildId == Context.Guild.Id && a.PatternId == guid).FirstOrDefaultAsync();
 
