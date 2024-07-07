@@ -58,6 +58,15 @@ namespace DiscordBot.Modules
         }
 
         [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("unban", "Desbane um membro")]
+        public async Task Unban([Summary("userId", "ID do usuario a ser desbanido")] ulong userId, string motivo = null)
+        {
+            await (await Context.Client.GetGuildAsync(Context.Guild.Id)).RemoveBanAsync(userId);
+            var user = await Context.Client.GetUserAsync(userId);
+            await RespondAsync($"**{user.Username}** foi desbanido do servidor.", ephemeral: true);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("kick", "Expulsa um membro")]
         public async Task Kick([Summary("usuario", "Usuario a ser expulso")] IUser user, string motivo = null)
         {
