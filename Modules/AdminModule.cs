@@ -97,7 +97,7 @@ namespace DiscordBot.Modules
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("list-banned-patterns", "Mostra os padroes banidos", runMode: RunMode.Async)]
-        public async Task Leaderboard()
+        public async Task ListBannedPattern()
         {
             await DeferAsync();
             var patterns = (await db.backlistPatterns.Find(a => a.GuildId == Context.Guild.Id)
@@ -139,7 +139,7 @@ namespace DiscordBot.Modules
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("edit-banned-pattern", "Edita um padrão banido", runMode: RunMode.Async)]
-        public async Task RemoveBannedPattern(Guid id, string newPattern)
+        public async Task EditBannedPattern(Guid id, string newPattern)
         {
             await DeferAsync();
 
