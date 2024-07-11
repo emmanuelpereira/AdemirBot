@@ -107,7 +107,7 @@ namespace DiscordBot.Modules
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [MessageCommand("Editar mensagem")]
-        public async Task CriarEventoPalco(IMessage msg)
+        public async Task EditarMensagem(IMessage msg)
         {
             await Context.Interaction.RespondWithModalAsync($"edit_message:{msg.Id}", new EventModal
             {
