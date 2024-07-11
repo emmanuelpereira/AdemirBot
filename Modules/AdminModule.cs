@@ -109,10 +109,10 @@ namespace DiscordBot.Modules
         [MessageCommand("Editar mensagem")]
         public async Task EditarMensagem(IMessage msg)
         {
-            await Context.Interaction.RespondWithModalAsync($"edit_message:{msg.Id}", new EventModal
+            await Context.Interaction.RespondWithModalAsync($"edit_message:{msg.Id}", new MessageModal
             {
                 Title = $"Editar mensagem",
-                Nome = msg.Content
+                Mensagem = msg.Content
             });
         }
 
