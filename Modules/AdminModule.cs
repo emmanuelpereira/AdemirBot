@@ -78,6 +78,40 @@ namespace DiscordBot.Modules
             await RespondAsync($"{memberIds.Length} Usuários Expulsos.", ephemeral: true);
         }
 
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("create-message", "Criar mensagem.", runMode: RunMode.Async)]
+        public async Task CreateMessage()
+            => await Context.Interaction.RespondWithModalAsync<MessageModal>("create_message");
+
+        [ModalInteraction(@"create_message")]
+        public async Task CreateMessage(MessageModal modal)
+        {
+            await Context.Channel.SendMessageAsync(modal.Mensagem);
+            await RespondAsync($"Mensagem enviada", ephemeral: true);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [MessageCommand("Editar mensagem")]
+        public async Task CriarEventoPalco(IMessage msg)
+        {
+            await Context.Interaction.RespondWithModalAsync($"edit_message:{msg.Id}", new EventModal
+            {
+                Title = $"Editar mensagem",
+                Nome = msg.Content
+            });
+        }
+
+        [ModalInteraction(@"edit_message:*", TreatAsRegex = true)]
+        public async Task EditMessageMessage(MessageModal modal)
+        {
+            string id = ((IModalInteraction)Context.Interaction).Data.CustomId;
+            var msgid = ulong.Parse(Regex.Match(id, @"edit_message:(\d+)").Groups[1].Value);
+            await Context.Channel.ModifyMessageAsync(msgid,  m => m.Content = modal.Mensagem);
+            await RespondAsync($"Mensagem editada", ephemeral: true);
+        }
+
+
         [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("purge", "Remover uma certa quantidade de mensagens de um canal", runMode: RunMode.Async)]
         public async Task PurgeMessages(
