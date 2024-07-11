@@ -6,16 +6,21 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using MongoDB.Driver;
 using DiscordBot.Domain.Entities;
+using Amazon.Runtime;
+using DiscordBot.Services;
+using System;
 
 namespace DiscordBot.Modules
 {
     public class AdminModule : InteractionModuleBase
     {
         private readonly Context db;
+        private readonly PaginationService paginator;
 
-        public AdminModule(Context context)
+        public AdminModule(Context context, PaginationService paginationService)
         {
             db = context;
+            this.paginator = paginationService;
         }
 
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -50,6 +55,15 @@ namespace DiscordBot.Modules
             }
             await (await Context.Client.GetGuildAsync(Context.Guild.Id)).AddBanAsync(user.Id, reason: motivo);
             await RespondAsync($"**{user.Username}** foi banido do servidor.", ephemeral: true);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("unban", "Desbane um membro")]
+        public async Task Unban([Summary("userId", "ID do usuario a ser desbanido")] ulong userId, string motivo = null)
+        {
+            await (await Context.Client.GetGuildAsync(Context.Guild.Id)).RemoveBanAsync(userId);
+            var user = await Context.Client.GetUserAsync(userId);
+            await RespondAsync($"**{user.Username}** foi desbanido do servidor.", ephemeral: true);
         }
 
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -125,6 +139,66 @@ namespace DiscordBot.Modules
             await DeleteOriginalResponseAsync();
         }
 
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("list-banned-patterns", "Mostra os padroes banidos", runMode: RunMode.Async)]
+        public async Task ListBannedPattern()
+        {
+            await DeferAsync();
+            var patterns = (await db.backlistPatterns.Find(a => a.GuildId == Context.Guild.Id)
+                .Project(a => new
+                {
+                    a.PatternId,
+                    a.Pattern
+                })
+                .SortByDescending(a => a.PatternId)
+                .Limit(100)
+                .ToListAsync())
+                .ToList();
+
+            var currentPage = 1;
+            var numPaginas = (int)Math.Ceiling(patterns.Count / 10M);
+            var paginas = new List<Page>(Enumerable.Range(0, numPaginas).Select(a => new Page()).ToList());
+            for (var i = 0; i < numPaginas; i++)
+            {
+                var page = paginas[i];
+                var lines = patterns.Where(a => (int)Math.Ceiling((patterns.IndexOf(a) + 1) / 10M) - 1 == i).Select(a => $"#{a.PatternId}. ||@{a.Pattern}||");
+                page.Description = string.Join("\n", lines);
+                page.Fields = new EmbedFieldBuilder[0];
+            }
+
+            var message = new PaginatedMessage(paginas, $"Padrões banidos em {Context.Guild.Name}", Color.Default, Context.User, new AppearanceOptions { });
+            message.CurrentPage = currentPage;
+            await paginator.RespondPaginatedMessageAsync(Context.Interaction, message);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("remove-banned-pattern", "Remove um padrão banido", runMode: RunMode.Async)]
+        public async Task RemoveBannedPattern(string id)
+        {
+            var guid = Guid.Parse(id);
+            var patterns = await db.backlistPatterns.DeleteAsync(a => a.GuildId == Context.Guild.Id && a.PatternId == guid);
+
+            await RespondAsync($"Padrão de ID {id} removido.", ephemeral: true);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("edit-banned-pattern", "Edita um padrão banido", runMode: RunMode.Async)]
+        public async Task EditBannedPattern(string id, string newPattern)
+        {
+            var guid = Guid.Parse(id);
+
+            var pattern = await db.backlistPatterns.Find(a => a.GuildId == Context.Guild.Id && a.PatternId == guid).FirstOrDefaultAsync();
+
+            if (pattern != null)
+            {
+                await db.backlistPatterns.UpsertAsync(pattern, a => a.GuildId == Context.Guild.Id && a.PatternId == guid);
+                await RespondAsync($"Padrão de ID {id} alterado para {newPattern}.", ephemeral: true);
+            }
+            else
+            {
+                await RespondAsync($"Padrão de ID {id} não encontrado.", ephemeral: true);
+            }
+        }
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("purge-user-messages", "Remover uma certa quantidade de mensagens de um usuário no canal", runMode: RunMode.Async)]
