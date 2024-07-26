@@ -59,7 +59,7 @@ namespace DiscordBot.Modules
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("unban", "Desbane um membro")]
-        public async Task Unban([Summary("userId", "ID do usuario a ser desbanido")] ulong userId, string motivo = null)
+        public async Task Unban([Summary("userId", "ID do usuario a ser desbanido")] ulong userId)
         {
             await (await Context.Client.GetGuildAsync(Context.Guild.Id)).RemoveBanAsync(userId);
             var user = await Context.Client.GetUserAsync(userId);
