@@ -1,10 +1,12 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Domain.Entities;
 using DiscordBot.Domain.ValueObjects;
 using DiscordBot.Utils;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
+using MongoDB.Driver.GridFS;
 using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
@@ -65,14 +67,59 @@ namespace DiscordBot.Services
 
                 if (config != null)
                 {
-                    if (channel.Id == config.LogChannelId) {
+                    if (channel.Id == config.LogChannelId)
+                    {
                         var logChannel = await guild.GetTextChannelAsync(config.LogChannelId);
-                        var msg = await arg1.DownloadAsync();
-                        var msgContent = await msg?.GetMessageContentWithAttachments();
-                        if (msgContent != null)
+                        var msg = await _db.messagelog.FindOneAsync(a => a.GuildId == guild.Id && a.MessageId == arg1.Id);
+
+                        var embeds = msg.EmbedsJson?.Select(a =>
                         {
-                            await channel.SendMessageAsync(msgContent);
-                        } 
+                            EmbedBuilderUtils.TryParse(a, out EmbedBuilder b);
+                            b = b.WithColor(Color.Default);
+                            return b?.Build();
+                        }).Where(a => a.Length > 0).ToArray();
+
+                        var msgAuthor = _client.GetUser(msg.UserId);
+
+                        var cards = new List<Embed>
+                        {
+                            new EmbedBuilder().WithTitle("Alguém está tentando excluir uma mensagem do Log.")
+                            .WithFields(new [] {
+                                new EmbedFieldBuilder().WithName("Data Mensagem").WithValue($"{msg.MessageDate:G}")
+                            })
+                            .WithDescription(msg.Content)
+                            .WithFooter(new EmbedFooterBuilder().WithIconUrl(msgAuthor?.GetDisplayAvatarUrl()).WithText(msgAuthor?.Username))
+                            .WithCurrentTimestamp()
+                            .WithColor(Color.Red)
+                            .Build()
+                        };
+
+                        if (embeds != null)
+                        {
+                            cards.AddRange(embeds);
+                        }
+                        var attachments = new List<string>();
+                        var sss = "";
+                        if (msg.Attachments != null)
+                        {
+                            foreach (var at in msg.Attachments)
+                            {
+                                var filename = Path.GetTempFileName();
+                                using (var stream = File.OpenWrite(filename))
+                                {
+                                    await _db.BgCardBucket.DownloadToStreamByNameAsync(at, stream);                                   
+                                }
+                                attachments.Add(filename);    
+                            }
+                        }
+
+                        if (msg.Content != null)
+                        {
+                            if (attachments.Count > 0)
+                                await channel.SendFilesAsync(attachments.Select(a => new FileAttachment(a, "anexo.png")), embeds: cards.ToArray());
+                            else
+                                await channel.SendMessageAsync(" " + sss, embeds: cards.ToArray());
+                        }
                     }
                 }
             }
@@ -1063,19 +1110,52 @@ namespace DiscordBot.Services
                     msgSinceAdemirCount[arg.GetGuildId()] = 0;
             }
 
-            if (!arg.Author?.IsBot ?? false)
-                await _db.messagelog.UpsertAsync(new Message
+            var attachments = arg.Attachments.Where(a => a.ContentType.Contains("image")).Select(a => a.Url).Take(3).ToList();
+            var embeds = arg.Embeds.Select(a => a.ToJsonString()).ToList();
+            var newAttachments = new List<string>();
+            foreach (var a in attachments)
+            {
+                using var client = new HttpClient();
+                using (var ms = new MemoryStream())
                 {
-                    MessageId = arg.Id,
-                    ChannelId = channel.Id,
-                    GuildId = channel.Guild.Id,
-                    Content = arg.Content ?? "",
-                    MessageDate = arg.Timestamp.UtcDateTime,
-                    UserId = arg.Author?.Id ?? 0,
-                    MessageLength = arg.Content?.Length ?? 0,
-                    Reactions = arg.Reactions.ToDictionary(a => a.Key.ToString()!, b => b.Value.ReactionCount)
-                });
+                    client.Timeout = TimeSpan.FromSeconds(5);
+                    var info = await client.GetStreamAsync(a);
+                    info.CopyTo(ms);
+                    ms.Position = 0;
+                    using var avatar = SKBitmap.Decode(ms);
+                    using (var surface = SKSurface.Create(new SKImageInfo(avatar.Width, avatar.Height)))
+                    {
+                        var canvas = surface.Canvas;
+                        var avatarRect = new SKRect(0, 0, avatar.Width, avatar.Height);
+                        canvas.DrawBitmap(avatar, avatarRect);
+                        var filename = Guid.NewGuid().ToString();
+                        // Salvar a imagem em um arquivo
+                        using (var image = surface.Snapshot())
+                        using (var data = image.Encode(SKEncodedImageFormat.Png, 50))
+                        using (var stream = new MemoryStream())
+                        {
+                            data.SaveTo(stream);
+                            stream.Position = 0;
+                            await _db.BgCardBucket.UploadFromStreamAsync(filename, stream);
+                            newAttachments.Add(filename);
+                        }
+                    }
+                }
 
+            }
+            await _db.messagelog.UpsertAsync(new Message
+            {
+                MessageId = arg.Id,
+                ChannelId = channel.Id,
+                GuildId = channel.Guild.Id,
+                Content = arg.Content ?? "",
+                MessageDate = arg.Timestamp.UtcDateTime,
+                UserId = arg.Author?.Id ?? 0,
+                MessageLength = arg.Content?.Length ?? 0,
+                Reactions = arg.Reactions.ToDictionary(a => a.Key.ToString()!, b => b.Value.ReactionCount),
+                Attachments = newAttachments,
+                EmbedsJson = embeds
+            });
             if (arg is IThreadChannel && ((IThreadChannel)arg).OwnerId == _client.CurrentUser.Id)
             {
                 await _db.threads.UpsertAsync(new ThreadChannel
