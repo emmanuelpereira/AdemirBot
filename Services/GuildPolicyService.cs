@@ -41,6 +41,7 @@ namespace DiscordBot.Services
         {
             _client.MessageReceived += _client_MessageReceived;
             _client.MessageUpdated += _client_MessageUpdated;
+            _client.MessageDeleted += _client_MessageDeleted; ;
             _client.UserJoined += _client_UserJoined;
             _client.UserLeft += _client_UserLeft;
             _client.ShardReady += _client_ShardReady;
@@ -51,6 +52,30 @@ namespace DiscordBot.Services
             _client.GuildScheduledEventCompleted += _client_GuildScheduledEventCompleted;
             _client.GuildScheduledEventStarted += _client_GuildScheduledEventStarted;
             _client.GuildScheduledEventUpdated += _client_GuildScheduledEventUpdated;
+        }
+
+        private async Task _client_MessageDeleted(Cacheable<IMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
+        {
+            var channel = await arg2.DownloadAsync();
+            if (channel is ITextChannel textChannel)
+            {
+                var guild = textChannel.Guild;
+
+                var config = await _db.ademirCfg.FindOneAsync(a => a.GuildId == guild.Id);
+
+                if (config != null)
+                {
+                    if (channel.Id == config.LogChannelId) {
+                        var logChannel = await guild.GetTextChannelAsync(config.LogChannelId);
+                        var msg = await arg1.DownloadAsync();
+                        var msgContent = await msg?.GetMessageContentWithAttachments();
+                        if (msgContent != null)
+                        {
+                            await channel.SendMessageAsync(msgContent);
+                        } 
+                    }
+                }
+            }
         }
 
         private Task _client_MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
