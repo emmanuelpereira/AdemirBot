@@ -41,6 +41,7 @@ namespace DiscordBot.Domain.Entities
         public bool KickNewAccounts { get; set; }
         public ChatMessage[] TrainingMessages { get; set; }
         public bool EnableBotUserNameDetection { get; set; }
-        public ulong[] FloodProtectionByPassChannels { get; internal set; }
+        public ulong[] FloodProtectionByPassChannels { get; set; }
+        public ulong LogChannelId { get; set; }
     }
 }

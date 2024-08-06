@@ -19,27 +19,26 @@ namespace DiscordBot.Modules
         }
 
         [RequireUserPermission(GuildPermission.Administrator)]
-        [SlashCommand("config-denuncias", "Configurar o canal de denúncias.", runMode: RunMode.Async)]
+        [SlashCommand("config-log", "Configurar o canal de logs.", runMode: RunMode.Async)]
         public async Task ConfigDenuncias(
-            [Summary(description: "Canal de denúncias")] IChannel canal)
+            [Summary(description: "Canal de logs")] IChannel canal)
         {
-            var config = await db.denunciaCfg.FindOneAsync(a => a.GuildId == Context.Guild.Id);
+            var config = await db.ademirCfg.FindOneAsync(a => a.GuildId == Context.Guild.Id);
             if (config == null)
             {
-                await db.denunciaCfg.AddAsync(new DenunciaConfig
+                await db.ademirCfg.AddAsync(new AdemirConfig
                 {
-                    DenunciaId = Guid.NewGuid(),
                     GuildId = Context.Guild.Id,
-                    ChannelId = canal.Id
+                    LogChannelId = canal.Id
                 });
             }
-            else
+            else 
             {
-                config.ChannelId = canal.Id;
-                await db.denunciaCfg.UpsertAsync(config);
+                config.LogChannelId = canal.Id;
+                await db.ademirCfg.UpsertAsync(config);
             }
 
-            await RespondAsync("Canal de denúncias configurado.", ephemeral: true);
+            await RespondAsync("Canal de logs configurado.", ephemeral: true);
         }
 
         [SlashCommand("denunciar", "Denunciar algo que fere as regras do servidor.", runMode: RunMode.Async)]
