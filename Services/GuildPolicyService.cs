@@ -85,7 +85,7 @@ namespace DiscordBot.Services
                         {
                             new EmbedBuilder().WithTitle("Alguém está tentando excluir uma mensagem do Log.")
                             .WithFields(new [] {
-                                new EmbedFieldBuilder().WithName("Data Mensagem").WithValue($"{msg.MessageDate:G}")
+                                new EmbedFieldBuilder().WithName("Data Mensagem").WithValue($"{msg.MessageDate.ToLocalTime():G}")
                             })
                             .WithDescription(msg.Content)
                             .WithFooter(new EmbedFooterBuilder().WithIconUrl(msgAuthor?.GetDisplayAvatarUrl()).WithText(msgAuthor?.Username))
