@@ -21,6 +21,7 @@ namespace DiscordBot.Services
         private ILogger<GuildPolicyService> _log;
         private Dictionary<ulong, List<string>> backlistPatterns = new Dictionary<ulong, List<string>>();
         private Dictionary<ulong, long> msgSinceAdemirCount = new Dictionary<ulong, long>();
+        private Dictionary<ulong, ulong> logChannelId = new Dictionary<ulong, ulong>();
         private Dictionary<ulong, ulong[]> channelsBypassFlood = new Dictionary<ulong, ulong[]>();
         private Dictionary<ulong, bool> lockServer = new Dictionary<ulong, bool>();
         List<IMessage> mensagensUltimos5Minutos = new List<IMessage>();
@@ -218,6 +219,7 @@ namespace DiscordBot.Services
                         await AnunciarEventosComecando(guild);
                         await BuscarPadroesBlacklistados(guild);
                         await BuscarCanaisComBypassDeFlood(guild);
+                        await BuscarLogChannelId(guild);
                     })).ToArray();
                     Task.WaitAll(tasks);
                     await Task.Delay(TimeSpan.FromSeconds(120) - sw.Elapsed);
@@ -337,6 +339,20 @@ namespace DiscordBot.Services
                 channelsBypassFlood.Add(guild.Id, ademirCfg.FloodProtectionByPassChannels);
             }
         }
+
+        public async Task BuscarLogChannelId(IGuild guild)
+        {
+            var ademirCfg = await _db.ademirCfg.Find(a => a.GuildId == guild.Id).FirstOrDefaultAsync();
+            if (logChannelId.ContainsKey(guild.Id))
+            {
+                logChannelId[guild.Id] = ademirCfg.LogChannelId;
+            }
+            else
+            {
+                logChannelId.Add(guild.Id, ademirCfg.LogChannelId);
+            }
+        }
+
         public async Task BuscarPadroesBlacklistados(IGuild guild)
         {
             var blacklist = await _db.backlistPatterns.Find(a => a.GuildId == guild.Id).ToListAsync();
@@ -1109,6 +1125,9 @@ namespace DiscordBot.Services
                 if (arg.Author?.Id == _client.CurrentUser.Id)
                     msgSinceAdemirCount[arg.GetGuildId()] = 0;
             }
+            var saveAttachments = false;
+            if (logChannelId.ContainsKey(arg.GetGuildId()))
+                saveAttachments = logChannelId[arg.GetGuildId()] == arg.Channel.Id;
 
             var attachments = arg.Attachments.Where(a => a.ContentType.Contains("image")).Select(a => a.Url).Take(3).ToList();
             var embeds = arg.Embeds.Select(a => a.ToJsonString()).ToList();
@@ -1136,7 +1155,10 @@ namespace DiscordBot.Services
                         {
                             data.SaveTo(stream);
                             stream.Position = 0;
-                            await _db.BgCardBucket.UploadFromStreamAsync(filename, stream);
+                            if (saveAttachments)
+                            {
+                                await _db.BgCardBucket.UploadFromStreamAsync(filename, stream);
+                            }
                             newAttachments.Add(filename);
                         }
                     }
