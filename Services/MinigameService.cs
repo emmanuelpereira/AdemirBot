@@ -331,7 +331,7 @@ Sempre dê três dicas para o usuário conseguir acertar.";
                                         var dica_3 = argms["dica_3"].ToString();
                                         var respostaa = argms["resposta"].ToString();
                                         Console.WriteLine($"{pergunta}\n\n{respostaa}");
-                                        return (ciencia, pergunta, respostaa);
+                                        return (ciencia, $"{pergunta}\n\nDicas:\n\n - {dica_1}\n - {dica_2}\n - {dica_3}", respostaa);
                                     }
                                     catch {
                                         continue;
@@ -341,8 +341,8 @@ Sempre dê três dicas para o usuário conseguir acertar.";
                             }
                         }
                     }
-                    continue;
                 }
+                continue;
             }
         }
 
