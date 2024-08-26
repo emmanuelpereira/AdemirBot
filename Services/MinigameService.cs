@@ -303,7 +303,7 @@ Sempre dê três dicas para o usuário conseguir acertar.";
                     N = 1,
                     MaxTokens = 1000,
                     Model = "gpt-4o",
-                    Temperature = 0.2f,
+                    Temperature = 0.1f,
                     Tools = fns
                 });
 
