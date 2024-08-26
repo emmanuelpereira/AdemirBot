@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using Discord;
 using Discord.WebSocket;
 using DiscordBot.Domain.Entities;
 using DiscordBot.Domain.ValueObjects;
@@ -6,9 +7,12 @@ using DiscordBot.Utils;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using OpenAI.Builders;
 using OpenAI.Managers;
 using OpenAI.ObjectModels;
 using OpenAI.ObjectModels.RequestModels;
+using OpenAI.ObjectModels.ResponseModels.ModelResponseModels;
+using OpenAI.ObjectModels.SharedModels;
 using System.Text.RegularExpressions;
 
 namespace DiscordBot.Services
@@ -282,38 +286,62 @@ namespace DiscordBot.Services
 
                 var prompt = $@"
 Crie um jogo de adivinhação de uma palavra que comece com a letra {ralpha}, que seja de nível aleatório que varia de fácil a muito difícil em {ciencia} e que seja indiscutivelmente verdade em relação às dicas.
-Sempre dê três dicas e certifique-se que elas são verídicas e não contraditórias.
-Repito, exijo que as tanto as dicas quanto a resposta dadas sejam verídicas e a resposta seja completamente coerente com as dicas.
-Dê a resposta em seguida no formato:
+Sempre dê três dicas para o usuário conseguir acertar.";
 
-Dicas: 
-- {{dica 1}}
-- {{dica 2}}
-- {{dica 3}}
+                var fn1 = new FunctionDefinitionBuilder("criar_jogo", "Cria o jogo")
+                   .AddParameter("pergunta", PropertyDefinition.DefineString("A pergunta. ex.: Família do reino animal"))
+                   .AddParameter("dica_1", PropertyDefinition.DefineString("Dica 1. Ex.: frequentemente associada ao medo"))
+                   .AddParameter("dica_2", PropertyDefinition.DefineNumber("Dica 2. Ex.: tem uma força enorme comparada ao seu tamanho"))
+                   .AddParameter("dica_3", PropertyDefinition.DefineNumber("Dica 3. Ex.: tem uma fobia que virou nome de filme"))
+                   .AddParameter("resposta", PropertyDefinition.DefineString("A resposta. Ex.: Aracnídeos"))
+                .Validate()
+                .Build();
 
-R: {{resposta verdadeira em relação às dicas 1, 2 e 3}}";
-
-                var result = await openAI.Completions.CreateCompletion(new CompletionCreateRequest
+                var fns = new List<ToolDefinition> { ToolDefinition.DefineFunction(fn1), ToolDefinition.DefineFunction(fn1) };
+                var result = await openAI.ChatCompletion.CreateCompletion (new ChatCompletionCreateRequest
                 {
-                    Prompt = prompt,
+                    Messages = new[] { new ChatMessage ("system", prompt)},
                     N = 1,
                     MaxTokens = 1000,
                     Model = "gpt-4o",
-                    Temperature = 0.2f
+                    Temperature = 0.2f,
+                    Tools = fns
                 });
 
-                var regex = new Regex(@"R: (\w+)");
-
-                if (result.Successful && result.Choices.Count > 0 && result.Choices[0].Text is string message && regex.Matches(message).Count == 1)
+                if (result.Successful && result.Choices.Count > 0)
                 {
-                    var charada = message.Match(@"([\S\s]*)R: \w+").Groups[1].Value.Trim();
-                    var resposta = message.Match(@"R: (\w+)$").Groups[1].Value;
+                    var tools = result.Choices[0].Message.ToolCalls;
+                    if (tools != null)
+                    {
+                        foreach (var toolCall in tools)
+                        {
+                            Console.WriteLine($"  {toolCall.Id}: {toolCall.FunctionCall}");
 
-                    if (string.IsNullOrEmpty(resposta) || resposta.Trim().Length == 0 || ralpha != resposta[0])
-                        continue;
-
-                    Console.WriteLine($"{charada}\n\n{resposta}");
-                    return (ciencia, charada, resposta);
+                            var fn = toolCall?.FunctionCall;
+                            if (fn != null)
+                            {
+                                if (fn.Name == "criar_jogo")
+                                {
+                                    try
+                                    {
+                                        var argms = fn.ParseArguments();
+                                        var pergunta = argms["pergunta"].ToString();
+                                        var dica_1 = argms["dica_1"].ToString();
+                                        var dica_2 = argms["dica_2"].ToString();
+                                        var dica_3 = argms["dica_3"].ToString();
+                                        var respostaa = argms["resposta"].ToString();
+                                        Console.WriteLine($"{pergunta}\n\n{respostaa}");
+                                        return (ciencia, pergunta, respostaa);
+                                    }
+                                    catch {
+                                        continue;
+                                    }
+                                }
+                                
+                            }
+                        }
+                    }
+                    continue;
                 }
             }
         }
