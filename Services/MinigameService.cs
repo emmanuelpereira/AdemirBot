@@ -298,7 +298,7 @@ R: {{resposta verdadeira em relação às dicas 1, 2 e 3}}";
                     Prompt = prompt,
                     N = 1,
                     MaxTokens = 1000,
-                    Model = Models.TextDavinciV3,
+                    Model = "gpt-4o",
                     Temperature = 0.2f
                 });
 
