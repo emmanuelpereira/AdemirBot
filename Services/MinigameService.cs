@@ -177,7 +177,7 @@ namespace DiscordBot.Services
                     return;
                 }
 
-                if (arg.Content.RemoverAcentos().Replace(" ", "").ToLower().Contains(minigame.Data.Aswer.RemoverAcentos().ToLower()))
+                if (arg.Content.RemoverAcentos().Replace(" ", "").ToLower().Contains(minigame.Data.Aswer.RemoverAcentos().Replace(" ", "").ToLower()))
                 {
                     minigame.Finished = true;
                     minigame.Winner = arg.Author.Id;
