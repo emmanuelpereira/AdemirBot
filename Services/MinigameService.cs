@@ -282,10 +282,9 @@ namespace DiscordBot.Services
 
                 var r = new Random().Next(0, ciencias.Length - 1);
                 var ciencia = ciencias[r];
-                var ralpha = (char)new Random().Next('A', 'Z');
 
                 var prompt = $@"
-Crie um jogo de adivinhação de uma palavra que comece com a letra {ralpha}, que seja de nível não muito fácil, mas que não exija cohecimento pleno em {ciencia}.
+Crie um jogo de adivinhação de uma palavra, que seja de nível não muito fácil, mas que não exija cohecimento pleno em {ciencia}.
 Sempre dê três dicas para o usuário conseguir acertar.";
 
                 var fn1 = new FunctionDefinitionBuilder("criar_jogo", "Cria o jogo")
