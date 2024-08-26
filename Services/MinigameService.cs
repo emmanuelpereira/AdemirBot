@@ -284,7 +284,7 @@ namespace DiscordBot.Services
                 var ciencia = ciencias[r];
 
                 var prompt = $@"
-Crie um jogo de adivinhação de uma palavra, que seja de nível não muito fácil, mas que não exija cohecimento pleno em {ciencia}.
+Crie um jogo de adivinhação de uma palavra, na matéria de {ciencia}, que seja de nível não muito fácil, mas que não exija conhecimento pleno em {ciencia}.
 Sempre dê três dicas para o usuário conseguir acertar.";
 
                 var fn1 = new FunctionDefinitionBuilder("criar_jogo", "Cria o jogo")
