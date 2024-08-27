@@ -198,6 +198,9 @@ namespace DiscordBot.Services
         {
             try
             {
+                if (!guild.IsPremium())
+                    return;
+
                 if (!StartedMinigame.ContainsKey(guild.Id))
                 {
                     StartedMinigame[guild.Id] = null;
