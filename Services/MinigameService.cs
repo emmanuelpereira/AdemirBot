@@ -305,7 +305,7 @@ Sempre dê três dicas para o usuário conseguir acertar.";
                     Messages = new[] { new ChatMessage ("system", prompt)},
                     N = 1,
                     MaxTokens = 1000,
-                    Model = "gpt-4o",
+                    Model = "o3-mini",
                     Temperature = 0.1f,
                     Tools = fns
                 });

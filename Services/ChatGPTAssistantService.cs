@@ -279,7 +279,7 @@ namespace DiscordBot.Services
                 if(guild.Id == 1055161583841595412)
                 {
                     var qtd = OpenAI.Tokenizer.GPT3.TokenizerGpt3.TokenCount(string.Join("\n", msgs.Select(a => a.Content)));
-                    gptModel = "gpt-4o";
+                    gptModel = "o3-mini";
                     gptTokenLimit = qtd > 8000 ? 8192 : 128000;
                 }
 
