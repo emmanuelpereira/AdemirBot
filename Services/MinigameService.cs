@@ -306,7 +306,6 @@ Sempre dê três dicas para o usuário conseguir acertar.";
                     N = 1,
                     MaxTokens = 1000,
                     Model = "o3-mini",
-                    Temperature = 0.1f,
                     Tools = fns
                 });
 

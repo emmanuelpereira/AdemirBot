@@ -118,7 +118,6 @@ namespace DiscordBot.Services
                 var imageResult = await _openAI.Audio.CreateTranscription(new AudioCreateTranscriptionRequest
                 {
                     Model = Models.WhisperV1,
-                    Temperature = 0f,
                     FileStream = ms,
                     FileName = audio.Filename
                 });
@@ -180,7 +179,7 @@ namespace DiscordBot.Services
                 var msgs = new List<ChatMessage>() { new ChatMessage("user", content, await m.GetGPTAuthorNameAsync()) };
 
                 var gptModel = Models.Gpt_3_5_Turbo;
-                var gptTokenLimit = gptModel == "gpt-4o" ? 8000 : 4000;
+                var gptTokenLimit = gptModel == "o3-mini" ? 1000000 : 1000000;
                 if (guild.Id == 1055161583841595412)
                 {
                     var qtd = OpenAI.Tokenizer.GPT3.TokenizerGpt3.TokenCount(string.Join("\n", msgs.Select(a => a.Content)));
@@ -209,7 +208,6 @@ namespace DiscordBot.Services
                     {
                         Prompt = $"De acordo com o chat de discord abaixo:\n\n{chatString}\n\nCriar um nome de Tópico curto para esta conversa",
                         Model = Models.TextDavinciV1,
-                        Temperature = 0.2F,
                         N = 1,
                     });
 
@@ -280,7 +278,7 @@ namespace DiscordBot.Services
                 {
                     var qtd = OpenAI.Tokenizer.GPT3.TokenizerGpt3.TokenCount(string.Join("\n", msgs.Select(a => a.Content)));
                     gptModel = "o3-mini";
-                    gptTokenLimit = qtd > 8000 ? 8192 : 128000;
+                    gptTokenLimit = qtd > 128000 ? 128192 : 128000;
                 }
 
                 while (OpenAI.Tokenizer.GPT3.TokenizerGpt3.TokenCount(string.Join("\n", msgs.Select(a => a.Content))) >= gptTokenLimit)
@@ -299,7 +297,6 @@ namespace DiscordBot.Services
                         //Functions = new List<FunctionDefinition> { fn1 },
                         Messages = msgs,
                         Model = gptModel,
-                        Temperature = 0.2F,
                         N = 1
                     });
 
